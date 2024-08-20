@@ -126,10 +126,23 @@ From TractorMix, you should obtain:
 * `Pval_anc0`, `Pval_anc1`: ancestry-specific p values
 * `include_anc0`, `include_anc1`: indicate if ancestry-specific dosages are included (Only for dichotomous to prevent false positive inflation due to low MAC)
 
+It's important to note that the degrees of freedom for joint p-values are not 1. For a two-way admixture cohort, the degree of freedom is 2, while for a three-way admixture cohort, it is 3. One should adjust for degree of freedom to correctly compute $\lambda_{GC}$
+
+```
+# adjust this according to your data
+dof = 2
+pvals = na.omit(sumstats$P)
+lambda = qchisq(pvals, df = dof, lower.tail = F)
+lambdaGC = median(lambda)/qchisq(0.5,dof)
+```
+
+
 In our UKBB analysis with 9,000 samples and 8.5M variants, it took approximately 10 hours per trait with 22 chromosomes run in parallel on a typical high performance computing cluster setup (using sparse GRM, 32GB RAM, 8 CPUs per chromosomes). 
 
 
 
+&nbsp;  
+&nbsp;  
 
 ### Optional: Wald test of Tractor-Mix (TBD)
 
