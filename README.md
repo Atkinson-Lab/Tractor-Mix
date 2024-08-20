@@ -61,8 +61,10 @@ After completing PC-Air, you can run PC-Relate to obtain the estimated kinship m
 
 To improve computational efficiency, you can create a sparse GRM using the following code:
 ```
+library(Matrix)
 PCRelatemat = pcrelateToMatrix(pcrelate_res, sample.include = iids, scaleKin = 2)[iids,iids]
 PCRelatemat_sparse = PCRelatemat
+# mask values < 0.05
 PCRelatemat_sparse[PCRelatemat_sparse < 0.05] = 0
 PCRelatemat_sparse = as(PCRelatemat_sparse, "sparseMatrix") 
 ```
