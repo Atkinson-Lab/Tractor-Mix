@@ -3,13 +3,13 @@
 #' @param obj The output form glmm.kin from GMMAT package
 #' @param infiles a vector of input file names in order (e.g. anc0.dosage.txt, anc1.dosage.txt)
 #' @param outfiles file name for the summary statistics
-#' @param AC_threshold This arguement only applies for binary traits. if a variant has *all* ancestry-specific allele counts greater than this value, Tractor-Mix will run a full model; otherwise, Tractor-Mix will drop ancestries with low AC, and only use ancestries with high AC for calculation. 
+#' @param AC_threshold If a variant has *all* ancestry-specific allele counts greater than this value, Tractor-Mix will run a full model; otherwise, Tractor-Mix will drop ancestries with low AC, and only use ancestries with high AC for calculation. 
 #' @return A list of summary statistics, based on users' input.
 #' @export
 #' 
 
 # version: 0.0.1
-# date of edit: 07/15/2024
+# date of edit: 02/14/2025
 script_version <- "0.0.1"
 message(paste("TractorMix.score Script Version :", script_version), "\n")
 
@@ -37,24 +37,21 @@ TractorMix.score <- function(obj, infiles, AC_threshold = 50, outfiles,  n_core 
   # number of ancestries
   n_anc = length(infiles)
   
-  # filter for certain variants if the phenotype is binary
-  ifbinary = NA 
+  # filter for certain variants 
   iffilter = NA 
   
   # type of test
+  if (is.na(AC_threshold)){stop("AC_threshold must be specified")}
+  if (AC_threshold %% 1 != 0){stop("AC_threshold must be an integer")}
+  
   if (any(grepl("gaussian", as.character(obj$call)))){
-    AC_threshold = -1
-    ifbinary = FALSE
     message("Run Tractor-Mix on continuous phenotype")
-    message("`AC_threshold` argument will be ignored")
   } else if (any(grepl("binomial", as.character(obj$call)))){
-    if (is.na(AC_threshold)){stop("AC_threshold must be specified for binary traits")}
-    if (AC_threshold %% 1 != 0){stop("AC_threshold must be an integer")}
-    ifbinary = TRUE
     message("Run Tractor-Mix on binary phenotype")
   } else {
     stop("You must specify `family = gaussian()` or `family = binomial()` in `glmmkin()`")
   }
+  
   
 
   # use wc -l to find the number of SNPs in each file
@@ -78,23 +75,16 @@ TractorMix.score <- function(obj, infiles, AC_threshold = 50, outfiles,  n_core 
   
   
   # setup a result table 
-  # Continuous 2-way: CHR, POS, ID, REF, ALT, Chi2, P, Eff_anc0, Eff_anc1, Pval_anc0, Pval_anc1
-  # Binary 2-way: CHR, POS, ID, REF, ALT, Chi2, P, Eff_anc0, Eff_anc1, Pval_anc0, Pval_anc1, include_anc0, include_anc1
+  # 2-way: CHR, POS, ID, REF, ALT, Chi2, P, Eff_anc0, Eff_anc1, Pval_anc0, Pval_anc1, AC_count_anc0, AC_count_anc1, include_anc0, include_anc1
   
-  if (ifbinary){
-    resDF = setNames(data.frame(matrix(data = NA, nrow = 0, ncol = (7 + 4 * n_anc))),
-                     c("CHR", "POS", "ID", "REF", "ALT", "Chi2", "P", 
-                       paste0("Eff_anc", 0:(n_anc-1)), 
-                       paste0("SE_anc", 0:(n_anc-1)), 
-                       paste0("Pval_anc", 0:(n_anc-1)),
-                       paste0("include_anc", 0:(n_anc-1))))
-  } else {
-    resDF = setNames(data.frame(matrix(data = NA, nrow = 0, ncol = (7 + 3 * n_anc))),
-                     c("CHR", "POS", "ID", "REF", "ALT", "Chi2", "P", 
-                       paste0("Eff_anc", 0:(n_anc-1)), 
-                       paste0("SE_anc", 0:(n_anc-1)), 
-                       paste0("Pval_anc", 0:(n_anc-1))))
-  }
+  resDF = setNames(data.frame(matrix(data = NA, nrow = 0, ncol = (7 + 5 * n_anc))),
+                   c("CHR", "POS", "ID", "REF", "ALT", "Chi2", "P", 
+                     paste0("Eff_anc", 0:(n_anc-1)), 
+                     paste0("SE_anc", 0:(n_anc-1)), 
+                     paste0("Pval_anc", 0:(n_anc-1)),
+                     paste0("AC_count", 0:(n_anc-1)),
+                     paste0("include_anc", 0:(n_anc-1))))
+  
   write.table(resDF, outfiles,  quote = F, row.names = F, sep = "\t")
   
   
@@ -156,7 +146,8 @@ TractorMix.score <- function(obj, infiles, AC_threshold = 50, outfiles,  n_core 
         # parse genotype, filter based on AC 
         G_ = geno_info[i,,]
         AC = colSums(G_)
-        filter_mask = AC_threshold < AC
+        filter_mask = AC > AC_threshold
+        
         if (!any(filter_mask)){
           res = rep(NA, ncol(resDF) - 5)
           names(res) = NULL
@@ -192,20 +183,14 @@ TractorMix.score <- function(obj, infiles, AC_threshold = 50, outfiles,  n_core 
             anc_pval = sapply((anc_eff/anc_se)^2, function(teststats){pchisq(as.numeric(teststats), df = 1, lower.tail = F)})
           }
           
-          if (ifbinary){
-            res = c(round(as.numeric(joint_chi2), 5),
-                    signif(as.numeric(joint_pval), 5),
-                    round(as.numeric(anc_eff), 5),
-                    round(as.numeric(anc_se), 5),
-                    signif(as.numeric(anc_pval), 5),
-                    filter_mask)
-          } else{
-            res = c(round(as.numeric(joint_chi2), 5),
-                    signif(as.numeric(joint_pval), 5),
-                    round(as.numeric(anc_eff), 5),
-                    round(as.numeric(anc_se), 5),
-                    signif(as.numeric(anc_pval), 5))
-          }
+          res = c(round(as.numeric(joint_chi2), 5),
+                  signif(as.numeric(joint_pval), 5),
+                  round(as.numeric(anc_eff), 5),
+                  round(as.numeric(anc_se), 5),
+                  signif(as.numeric(anc_pval), 5),
+                  AC,
+                  filter_mask)
+
           
         } else { # VarScore is not invertable
           res = rep(NA, ncol(resDF) - 5)
@@ -255,7 +240,7 @@ TractorMix.score <- function(obj, infiles, AC_threshold = 50, outfiles,  n_core 
         # parse genotype, filter based on AC 
         G_ = geno_info[i,,]
         AC = colSums(G_)
-        filter_mask = AC_threshold < AC
+        filter_mask = AC > AC_threshold
         if (!any(filter_mask)){
           res = rep(NA, ncol(resDF) - 5)
           names(res) = NULL
@@ -289,20 +274,13 @@ TractorMix.score <- function(obj, infiles, AC_threshold = 50, outfiles,  n_core 
             anc_pval = sapply((anc_eff/anc_se)^2, function(teststats){pchisq(as.numeric(teststats), df = 1, lower.tail = F)})
           }
           
-          if (ifbinary){
-            res = c(round(as.numeric(joint_chi2), 5),
-                    signif(as.numeric(joint_pval), 5),
-                    round(as.numeric(anc_eff), 5),
-                    round(as.numeric(anc_se), 5),
-                    signif(as.numeric(anc_pval), 5),
-                    filter_mask)
-          } else{
-            res = c(round(as.numeric(joint_chi2), 5),
-                    signif(as.numeric(joint_pval), 5),
-                    round(as.numeric(anc_eff), 5),
-                    round(as.numeric(anc_se), 5),
-                    signif(as.numeric(anc_pval), 5))
-          }
+          res = c(round(as.numeric(joint_chi2), 5),
+                  signif(as.numeric(joint_pval), 5),
+                  round(as.numeric(anc_eff), 5),
+                  round(as.numeric(anc_se), 5),
+                  signif(as.numeric(anc_pval), 5),
+                  AC,
+                  filter_mask)
 
 
         } else { # VarScore is not invertable
