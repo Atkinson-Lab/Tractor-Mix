@@ -110,7 +110,8 @@ source("TractorMix.score.R")
 # continuous
 TractorMix.score(obj = Model_Null, 
                  infiles = c("Genotype.anc0.hapcount.txt", "Genotype.anc1.hapcount.txt"),
-                 outfiles = "result.tsv" )
+                 outfiles = "result.tsv", 
+                 AC_threshold = 50)
                  
 # dichotomous (need to specify a threshold to filter out variants with low ancestry-specific allele counts)
 TractorMix.score(obj = Model_Null, 
@@ -124,7 +125,7 @@ From TractorMix, you should obtain:
 * `Eff_anc0`, `Eff_anc1`: ancestry-specific effect size estimates
 * `SE_anc0`, `SE_anc1`: ancestry-specific standard error
 * `Pval_anc0`, `Pval_anc1`: ancestry-specific p values
-* `include_anc0`, `include_anc1`: indicate if ancestry-specific dosages are included (Only for dichotomous to prevent false positive inflation due to low MAC)
+* `include_anc0`, `include_anc1`: indicate if ancestry-specific dosages are included (to prevent false positive inflation due to low MAC)
 
 It's important to note that the degrees of freedom for joint p-values are not 1. For a two-way admixture cohort, the degree of freedom is 2, while for a three-way admixture cohort, it is 3. One should adjust for degree of freedom to correctly compute $\lambda_{GC}$
 
