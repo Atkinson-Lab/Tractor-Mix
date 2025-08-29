@@ -90,7 +90,7 @@ TractorMix.score <- function(obj, infiles, AC_threshold = 50, outfiles,  n_core 
   
   # retrieve file names, and check if consistent
   files_colnames = lapply(infiles, function(infile){colnames(fread(input = infile, sep = "\t", skip = 0, nrows = 1))})
-  if (Reduce(function(x, y) identical(x, y), files_colnames)){
+  if (all(sapply(files_colnames, function(x) identical(x, files_colnames[[1]])))){
     sample_id = files_colnames[[1]][6:length(files_colnames[[1]])]
   }else{
     stop("Sample order in dosage files do not match!")
