@@ -109,13 +109,13 @@ source("TractorMix.score.R")
 
 # continuous
 TractorMix.score(obj = Model_Null, 
-                 infiles = c("Genotype.anc0.hapcount.txt", "Genotype.anc1.hapcount.txt"),
+                 infiles = c("Genotype.anc0.dosage.txt", "Genotype.anc1.dosage.txt"),
                  outfiles = "result.tsv", 
                  AC_threshold = 50)
                  
 # dichotomous (need to specify a threshold to filter out variants with low ancestry-specific allele counts)
 TractorMix.score(obj = Model_Null, 
-                 infiles = c("Genotype.anc0.hapcount.txt", "Genotype.anc1.hapcount.txt"),
+                 infiles = c("Genotype.anc0.dosage.txt", "Genotype.anc1.dosage.txt"),
                  outfiles = "result.tsv", 
                  AC_threshold = 50)
 ```
