@@ -11,6 +11,7 @@ Tractor-Mix consists of 6 steps, namely:
 * Fit the null model with [GMMAT](https://github.com/hanchenphd/GMMAT)  
 * Run Tractor-Mix
 
+Note: The current implementation can handle a cohort with ~15000 individuals
 
 ![Image Title](pipeline.png)
 
