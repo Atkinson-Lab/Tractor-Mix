@@ -45,13 +45,17 @@ For a 2-way admixture, this process will generate six files in total (2 VCFs, 2 
 &nbsp;  
 &nbsp;  
 
-### Step3: Estimate covariates with PC-Air  
+### Step3: Estimate covariates with PC-Air [or simple PC]
 
 In the linear/logistic mixed model, principal components (PCs) or admixture proportions are typically used to account for population stratification. For cohorts with related samples, a common approach is to first partition the samples into independent and related subsets. We construct the PC space using the independent samples and then project the related individuals into this space, ensuring that the principal components are not influenced by family structure. This method is implemented in the R package [GENESIS](https://github.com/UW-GAC/GENESIS), which can be installed via Bioconductor. A tutorial on running PC-Air can be found [here](http://bioconductor.org/packages/release/bioc/vignettes/GENESIS/inst/doc/pcair.html).
 
 Briefly, if you have VCF files, you might perform LD pruning using PLINK and then convert the `bim/bam/fam` files to GDS format with `SNPRelate::snpgdsBED2GDS`. In addition to genotype data, GENESIS requires a KING-robust estimate as input. You can compute the KING-robust matrix using `SNPRelate`, as instructed in the GENESIS vignette, or use PLINK2 with the `plink2 --make-king square` argument.
 
-**[Note: In our simulations and the benchmark from the [GENESIS paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7904076/#sup1), the difference between raw PCA vs PC-Air is minor]**
+Alternatively, you may use PLINK to calculate the PC.
+
+**[Note: In our simulations and the benchmark from the [GENESIS paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7904076/#sup1), the difference between raw PCA vs PC-Air is minor.]**
+
+
 
 &nbsp;  
 &nbsp;  
@@ -70,6 +74,7 @@ PCRelatemat_sparse[PCRelatemat_sparse < 0.05] = 0
 PCRelatemat_sparse = as(PCRelatemat_sparse, "sparseMatrix") 
 ```
 
+Alternatively, you may use PLINK/GCTA/SAIGE to calculate the GRM. 
 
 **[Note: In our simulations and the benchmark from the [GENESIS paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7904076/#sup1), the difference between raw GRM vs PC-Relate is minor]**
 
