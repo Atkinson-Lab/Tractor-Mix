@@ -60,11 +60,11 @@ Alternatively, you may use PLINK to calculate the PC.
 &nbsp;  
 &nbsp;  
 
-### Step4: Estimate GRM/kinship with PC-Relate  
+### Step4: Estimate GRM/kinship with PC-Relate  [or standard GRM]
 
 After completing PC-Air, you can run PC-Relate to obtain the estimated kinship matrix, using several top PCs from PC-Air (refer to [the same tutorial](http://bioconductor.org/packages/release/bioc/vignettes/GENESIS/inst/doc/pcair.html)). Please note that GENESIS may occasionally scramble the order of samples in the output file, especially if your sample IDs are numerical, so it's important to ensure the order is correct.
 
-To improve computational efficiency, you can create a sparse GRM using the following code:
+To improve computational efficiency, we recommend creating a sparse GRM using the following code:
 ```
 library(Matrix)
 PCRelatemat = pcrelateToMatrix(pcrelate_res, sample.include = iids, scaleKin = 2)[iids,iids]
@@ -133,18 +133,9 @@ From TractorMix, you should obtain:
 * `Pval_anc0`, `Pval_anc1`: ancestry-specific p values
 * `include_anc0`, `include_anc1`: indicate if ancestry-specific dosages are included (to prevent false positive inflation due to low MAC)
 
-It's important to note that the degrees of freedom for joint p-values are not 1. For a two-way admixture cohort, the degree of freedom is 2, while for a three-way admixture cohort, it is 3. One should adjust for degree of freedom to correctly compute $\lambda_{GC}$
-
-```
-# adjust this according to your data
-dof = 2
-pvals = na.omit(sumstats$P)
-lambda = qchisq(pvals, df = dof, lower.tail = F)
-lambdaGC = median(lambda)/qchisq(0.5,dof)
-```
 
 
-In our UKBB analysis with 9,000 samples and 8.5M variants, it took approximately 10 hours per trait with 22 chromosomes run in parallel on a typical high performance computing cluster setup (using sparse GRM, 32GB RAM, 8 CPUs per chromosomes). 
+In our UKBB analysis with 9,000 samples and 8.5M variants, it took approximately 3 hours per trait with 22 chromosomes run in parallel on a typical high performance computing cluster setup (using sparse GRM, 32GB RAM, 8 CPUs per chromosome). 
 
 
 
