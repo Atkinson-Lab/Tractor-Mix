@@ -13,7 +13,7 @@ Tractor-Mix consists of 6 steps, namely:
 
 Note: The current implementation can handle a cohort with ~15000 individuals; larger cohort might take days to finish.
 
-![Image Title](pipeline.pdf)
+![Image Title](pipeline.png)
 
 
 &nbsp;  
