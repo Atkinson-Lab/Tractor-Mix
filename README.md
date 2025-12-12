@@ -6,14 +6,14 @@ Tractor-Mix is a GWAS method tailored for admixed populations with related indiv
 Tractor-Mix consists of 6 steps, namely:  
 * Phasing and local ancestry inference  
 * Deconvolute genetic markers by local ancestry  
-* Estimate covariates with PC-Air  
-* Estimate GRM/kinship with PC-Relate  
+* Estimate covariates with PC-Air (or basic PC)
+* Estimate GRM/kinship with PC-Relate  (or basic GRM)
 * Fit the null model with [GMMAT](https://github.com/hanchenphd/GMMAT)  
 * Run Tractor-Mix
 
-Note: The current implementation can handle a cohort with ~15000 individuals
+Note: The current implementation can handle a cohort with ~15000 individuals; larger cohort might take days to finish.
 
-![Image Title](pipeline.png)
+![Image Title](pipeline.pdf)
 
 
 &nbsp;  
@@ -74,7 +74,7 @@ PCRelatemat_sparse[PCRelatemat_sparse < 0.05] = 0
 PCRelatemat_sparse = as(PCRelatemat_sparse, "sparseMatrix") 
 ```
 
-Alternatively, you may use PLINK/GCTA/SAIGE to calculate the GRM. 
+Alternatively, you may use PLINK/GCTA/SAIGE to calculate the GRM. But you may need to reformat the GRM to be a square matrix, so that it can be read by GMMAT. You shall consider masking a GRM, and convert it to `sparseMatrix`. This procedure often largely enhance the computational efficiency. 
 
 **[Note: In our simulations and the benchmark from the [GENESIS paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7904076/#sup1), the difference between raw GRM vs PC-Relate is minor]**
 
@@ -107,24 +107,26 @@ In essence, we fit a linear or logistic mixed model that includes covariates as 
 &nbsp;  
 &nbsp;  
 
-### Step6: Run Tractor-Mix  
+### Step6: Run Tractor-Mix (unconditional or conditional)
 
-Now you should have the null model and ancestry-specific genotype `dosage` files. You can run Tractor-Mix with:
+Now you should have the null model and ancestry-specific genotype `dosage` files. You can run unconditional Tractor-Mix with `TractorMix.score`. You can also run conditional analysis by including the `hapcount` file in `TractorMix.score_cond`.
 ```
+# unconditional
 source("TractorMix.score.R")
-
-# continuous
 TractorMix.score(obj = Model_Null, 
-                 infiles = c("Genotype.anc0.dosage.txt", "Genotype.anc1.dosage.txt"),
+                 infiles = c("Admix.anc0.dosage.txt", "Admix.anc1.dosage.txt"),
                  outfiles = "result.tsv", 
                  AC_threshold = 50)
-                 
-# dichotomous (need to specify a threshold to filter out variants with low ancestry-specific allele counts)
-TractorMix.score(obj = Model_Null, 
-                 infiles = c("Genotype.anc0.dosage.txt", "Genotype.anc1.dosage.txt"),
+ 
+# conditional      
+source("TractorMix.score_cond.R")
+TractorMix.score_cond(obj = Model_Null, 
+                 infiles_geno = c("Admix.anc0.dosage.txt", "Admix.anc1.dosage.txt"),
+                 infiles_la = c("Admix.anc0.hapcount.txt"),
                  outfiles = "result.tsv", 
                  AC_threshold = 50)
 ```
+
 
 From TractorMix, you should obtain:  
 * `P`: a joint p-value
@@ -135,8 +137,7 @@ From TractorMix, you should obtain:
 
 
 
-In our UKBB analysis with 9,000 samples and 8.5M variants, it took approximately 3 hours per trait with 22 chromosomes run in parallel on a typical high performance computing cluster setup (using sparse GRM, 32GB RAM, 8 CPUs per chromosome). 
-
+In our UKBB analysis with 9,000 samples and 8.5M variants, it took approximately 3 hours per trait with 22 chromosomes run in parallel on a typical high performance computing cluster setup (using sparse GRM, 16GB RAM, 8 CPUs per chromosome). 
 
 
 &nbsp;  
