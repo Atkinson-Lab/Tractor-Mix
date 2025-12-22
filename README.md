@@ -11,13 +11,19 @@ Tractor-Mix consists of 6 steps, namely:
 * Fit the null model with [GMMAT](https://github.com/hanchenphd/GMMAT)  
 * Run Tractor-Mix
 
-Note: The current implementation can handle a cohort with ~15000 individuals; larger cohort might take days to finish.
+Note: The current implementation can handle a cohort with ~15000 individuals; a larger cohort might take days to finish.
 
 ![Image Title](pipeline.png)
 
 
 &nbsp;  
 &nbsp;  
+
+
+### Dependencies: 
+
+R > 4.0 with `GMMAT`, `Matrix`, `data.table`, `doParallel`, `foreach`, `dplyr`, `abind` pre-installed
+
 
 ### Step1: Phasing and local ancestry inference  
 
