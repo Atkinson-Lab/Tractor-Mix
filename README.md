@@ -19,6 +19,10 @@ Note: The current implementation can handle a cohort with ~15000 individuals; a 
 &nbsp;  
 &nbsp;  
 
+### Tutorials:
+
+We have developed a tutorial to run [Tractor-Mix](https://github.com/Atkinson-Lab/Tractor-tutorial/tree/main). 
+
 
 ### Dependencies: 
 
